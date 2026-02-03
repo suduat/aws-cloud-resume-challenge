@@ -1,5 +1,4 @@
 name: Upload html5up-strata
-
 on:
   workflow_dispatch:
   push:
