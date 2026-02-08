@@ -3,19 +3,78 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - main
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: jakejarvis/s3-sync-action@master
-      with:
-        args: --acl private --follow-symlinks --delete
-      env:
-        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: 'ap-south-1'
-        SOURCE_DIR: 'html5up-strata'
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Configure AWS credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+      
+      # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false  # Important for clean outputs
+      
+      # Get dynamic values from Terraform
+      - name: Get Infrastructure Values from Terraform
+        id: infra
+        run: |
+          cd infra
+          terraform init
+          LAMBDA_URL=$(terraform output -raw lambda_function_url)
+          CF_DIST_ID=$(terraform output -raw cloudfront_distribution_id)
+          S3_BUCKET=$(terraform output -raw s3_bucket_name)
+          echo "lambda_url=$LAMBDA_URL" >> $GITHUB_OUTPUT
+          echo "cf_dist_id=$CF_DIST_ID" >> $GITHUB_OUTPUT
+          echo "s3_bucket=$S3_BUCKET" >> $GITHUB_OUTPUT
+          echo "✅ Lambda URL: $LAMBDA_URL"
+          echo "✅ CloudFront ID: $CF_DIST_ID"
+          echo "✅ S3 Bucket: $S3_BUCKET"
+      
+      # Generate config.js with dynamic Lambda URL
+      - name: Generate config.js
+        run: |
+          mkdir -p html5up-strata/assets/js
+          cat > html5up-strata/assets/js/config.js << 'EOF'
+          const CONFIG = {
+            LAMBDA_URL: "${{ steps.infra.outputs.lambda_url }}"
+          };
+          EOF
+          echo "✅ Generated config.js with Lambda URL"
+          cat html5up-strata/assets/js/config.js
+      
+      # Upload to S3
+      - name: Sync files to S3
+        run: |
+          aws s3 sync html5up-strata/ s3://${{ steps.infra.outputs.s3_bucket }}/ \
+            --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*"
+          echo "✅ Files synced to S3"
+      
+      # Invalidate CloudFront cache
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.infra.outputs.cf_dist_id }} \
+            --paths "/*"
+          echo "✅ CloudFront cache invalidated"
+      
+      # Summary
+      - name: Deployment Summary
+        run: |
+          echo "🚀 Deployment Complete!"
+          echo "📍 Website: https://sudeshna.resume.animals4life.shop"
+          echo "⚡ Lambda: ${{ steps.infra.outputs.lambda_url }}"
+          echo "☁️  CloudFront: ${{ steps.infra.outputs.cf_dist_id }}"
