@@ -95,11 +95,9 @@ resource "aws_lambda_function_url" "url1" {
   authorization_type = "NONE"
   
   cors {
-    allow_credentials = true
-    allow_origins     = ["*"]  
-    allow_methods     = ["*"]
-    allow_headers     = ["*"]
-    expose_headers    = ["*"]
+    allow_origins     = ["https://sudeshna.resume.animals4life.shop"]  
+    allow_methods     = ["GET"]
+    allow_headers     = ["content-type"]
     max_age           = 86400
   }
 
