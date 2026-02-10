@@ -1,12 +1,10 @@
-name: Terraform Deploy
+name: Terraform Destroy
 
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch:   # Manual button click
 
 jobs:
-  terraform:
+  destroy:
     runs-on: ubuntu-latest
 
     permissions:
@@ -17,10 +15,10 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::447572331640:role/github-actions-role
+          role-to-assume: arn:aws:iam::<YOUR_ACCOUNT_ID>:role/github-actions-role
           aws-region: ap-south-1
 
       - name: Setup Terraform
@@ -30,6 +28,6 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Terraform Apply
+      - name: Terraform Destroy
         working-directory: infra
-        run: terraform apply -auto-approve
+        run: terraform destroy -auto-approve
