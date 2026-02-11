@@ -143,6 +143,7 @@ resource "random_id" "bucket_suffix" {
 
 resource "aws_s3_bucket" "resume_bucket" {
   bucket = "animals4life-resume-${random_id.bucket_suffix.hex}"
+  force_destroy = true
 }
 
 # Keep bucket private - CloudFront will access it via OAC
