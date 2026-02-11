@@ -50,6 +50,7 @@ data "aws_iam_policy_document" "github_oidc_trust" {
 resource "aws_iam_role" "github_actions" {
   name               = "GitHubActionsTerraformRole"
   assume_role_policy = data.aws_iam_policy_document.github_oidc_trust.json
+  max_session_duration = 14400   # 4 hours
 }
 
 # Permissions (CRC-friendly)
