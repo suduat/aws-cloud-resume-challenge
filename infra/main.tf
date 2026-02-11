@@ -160,6 +160,10 @@ resource "aws_s3_bucket_public_access_block" "resume_bucket_pab" {
 resource "aws_s3_bucket_policy" "resume_bucket_policy" {
   bucket = aws_s3_bucket.resume_bucket.id
 
+  depends_on = [
+    aws_cloudfront_distribution.resume_distribution
+  ]
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -353,6 +357,16 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
 
   depends_on = [aws_acm_certificate_validation.cert]
 }
+
+resource "aws_cloudfront_invalidation" "invalidate_all" {
+  distribution_id = aws_cloudfront_distribution.resume_distribution.id
+  paths           = ["/*"]
+
+  depends_on = [
+    aws_s3_object.website_files
+  ]
+}
+
 
 # ==========================================
 # ROUTE53 DNS RECORDS
