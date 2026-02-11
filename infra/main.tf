@@ -250,6 +250,10 @@ resource "aws_acm_certificate" "cert" {
 # ==========================================
 resource "aws_route53_zone" "main" {
   name = "animals4life.shop"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # DNS validation record for ACM certificate
