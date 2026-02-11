@@ -21,7 +21,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 # Trust policy
 data "aws_iam_policy_document" "github_oidc_trust" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
     principals {
@@ -29,13 +29,22 @@ data "aws_iam_policy_document" "github_oidc_trust" {
       identifiers = [aws_iam_openid_connect_provider.github.arn]
     }
 
+    # REQUIRED
     condition {
       test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    # Allow any workflow in this repo
+    condition {
+      test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:refs/heads/main"]
+      values   = ["repo:${var.github_repo}:*"]
     }
   }
 }
+
 
 # IAM Role for GitHub Actions
 resource "aws_iam_role" "github_actions" {
