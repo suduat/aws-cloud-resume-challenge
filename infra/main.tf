@@ -358,16 +358,6 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
   depends_on = [aws_acm_certificate_validation.cert]
 }
 
-resource "aws_cloudfront_invalidation" "invalidate_all" {
-  distribution_id = aws_cloudfront_distribution.resume_distribution.id
-  paths           = ["/*"]
-
-  depends_on = [
-    aws_s3_object.website_files
-  ]
-}
-
-
 # ==========================================
 # ROUTE53 DNS RECORDS
 # ==========================================
