@@ -252,12 +252,9 @@ resource "aws_acm_certificate" "cert" {
 # ==========================================
 # ROUTE53 HOSTED ZONE
 # ==========================================
-resource "aws_route53_zone" "main" {
-  name = "animals4life.shop"
-
-  lifecycle {
-    prevent_destroy = true
-  }
+data "aws_route53_zone" "main" {
+  name         = "animals4life.shop"
+  private_zone = false
 }
 
 # DNS validation record for ACM certificate
@@ -275,7 +272,7 @@ resource "aws_route53_record" "cert_validation" {
   records         = [each.value.record]
   ttl             = 60
   type            = each.value.type
-  zone_id         = aws_route53_zone.main.zone_id
+  zone_id         = data.aws_route53_zone.main.zone_id
 }
 
 # Wait for certificate validation
@@ -363,7 +360,7 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
 # ==========================================
 # A record for animals4life.shop pointing to CloudFront
 resource "aws_route53_record" "root" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = data.aws_route53_zone.main.zone_id
   name    = "animals4life.shop"
   type    = "A"
 
@@ -376,7 +373,7 @@ resource "aws_route53_record" "root" {
 
 # A record for sudeshna.resume.animals4life.shop pointing to CloudFront
 resource "aws_route53_record" "resume_subdomain" {
-  zone_id = aws_route53_zone.main.zone_id
+  zone_id = data.aws_route53_zone.main.zone_id
   name    = local.resume_subdomain
   type    = "A"
 
