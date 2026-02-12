@@ -8,9 +8,11 @@ table = dynamodb.Table('Cloudresume-test')
 def lambda_handler(event, context):
     # Simple CORS headers - just the asterisk
     cors_headers = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
     }
-
     
     # Handle OPTIONS preflight
     http_method = event.get('requestContext', {}).get('http', {}).get('method', '')
