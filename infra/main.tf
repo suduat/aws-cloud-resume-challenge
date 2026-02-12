@@ -298,7 +298,6 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
   ]
 
   depends_on = [
-    aws_s3_bucket_policy.resume_bucket_policy,
     aws_acm_certificate_validation.cert
   ]
 
