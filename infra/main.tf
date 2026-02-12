@@ -94,13 +94,6 @@ resource "aws_lambda_function_url" "url1" {
   function_name      = aws_lambda_function.myfunc.function_name
   authorization_type = "NONE"
   
-  cors {
-    allow_origins     = ["https://sudeshna.resume.animals4life.shop"]  
-    allow_methods     = ["GET"]
-    allow_headers     = ["content-type"]
-    max_age           = 86400
-  }
-
   depends_on = [aws_lambda_permission.allow_function_url]
 }
 
