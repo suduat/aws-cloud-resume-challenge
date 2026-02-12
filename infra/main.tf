@@ -388,7 +388,7 @@ resource "aws_route53_record" "resume_subdomain" {
 # OUTPUTS
 # ==========================================
 output "nameservers" {
-  value       = aws_route53_zone.main.name_servers
+  value       = data.aws_route53_zone.main.name_servers
   description = "Copy these nameservers to GoDaddy!"
 }
 
