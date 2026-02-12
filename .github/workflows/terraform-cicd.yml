@@ -26,12 +26,19 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Clean terraform cache
-        run: rm -rf infra/.terraform
-  
+      # 💣 Remove any cached providers
+      - name: Clean Terraform Cache
+        run: |
+          rm -rf infra/.terraform
+          rm -f infra/.terraform.lock.hcl
+
       - name: Terraform Init
         working-directory: infra
         run: terraform init -upgrade
+
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
 
       - name: Terraform Apply
         working-directory: infra
