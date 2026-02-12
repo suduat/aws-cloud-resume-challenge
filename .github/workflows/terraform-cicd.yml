@@ -43,3 +43,12 @@ jobs:
       - name: Terraform Apply
         working-directory: infra
         run: terraform apply -auto-approve
+
+      - name: CloudFront Invalidation
+        working-directory: infra
+        run: |
+          DIST_ID=$(terraform output -raw cloudfront_distribution_id)
+          aws cloudfront create-invalidation \
+            --distribution-id $DIST_ID \
+            --paths "/*"
+
