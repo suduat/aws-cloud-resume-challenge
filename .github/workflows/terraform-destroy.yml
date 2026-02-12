@@ -30,4 +30,6 @@ jobs:
 
       - name: Terraform Destroy
         working-directory: infra
-        run: terraform destroy -auto-approve
+        run: |
+          terraform state rm aws_route53_zone.main || true
+          terraform destroy -auto-approve
