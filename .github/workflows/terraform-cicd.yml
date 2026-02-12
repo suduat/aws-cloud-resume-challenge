@@ -26,6 +26,9 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Clean terraform cache
+        run: rm -rf infra/.terraform
+  
       - name: Terraform Init
         working-directory: infra
         run: terraform init -upgrade
