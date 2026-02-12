@@ -289,13 +289,18 @@ resource "aws_cloudfront_origin_access_control" "oac" {
 resource "aws_cloudfront_distribution" "resume_distribution" {
   enabled             = true
   is_ipv6_enabled     = true
+  wait_for_deployment = true
   default_root_object = "index.html"
+
   aliases = [
     "animals4life.shop",
-    local.resume_subdomain
+    local.resume_subdomain  
   ]
 
-  price_class = "PriceClass_100" # Use only North America and Europe
+  depends_on = [
+    aws_s3_bucket_policy.resume_bucket_policy,
+    aws_acm_certificate_validation.cert
+  ]
 
   origin {
     domain_name              = aws_s3_bucket.resume_bucket.bucket_regional_domain_name
@@ -344,8 +349,6 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
     response_code      = 200
     response_page_path = "/index.html"
   }
-
-  depends_on = [aws_acm_certificate_validation.cert]
 }
 
 # ==========================================
