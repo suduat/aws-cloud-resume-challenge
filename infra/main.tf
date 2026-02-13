@@ -81,13 +81,13 @@ data "archive_file" "zip_the_python_code" {
 }
 
 resource "aws_lambda_permission" "allow_function_url" {
-  statement_id  = "AllowPublicFunctionUrlInvoke"
-  action        = "lambda:InvokeFunctionUrl"
-  function_name = aws_lambda_function.myfunc.function_name
-  principal     = "*"
-
+  statement_id           = "AllowPublicFunctionUrlInvoke"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.myfunc.function_name
+  principal              = "*"
   function_url_auth_type = "NONE"
 }
+
 resource "aws_lambda_permission" "allow_public_invoke" {
   statement_id  = "AllowPublicInvoke"
   action        = "lambda:InvokeFunction"
@@ -95,11 +95,18 @@ resource "aws_lambda_permission" "allow_public_invoke" {
   principal     = "*"
 }
 
-# Lambda Function URL
+# Lambda Function URL with CORS
 resource "aws_lambda_function_url" "url1" {
   function_name      = aws_lambda_function.myfunc.function_name
   authorization_type = "NONE"
-  
+
+  cors {
+    allow_origins = ["*"]
+    allow_methods = ["*"]
+    allow_headers = ["*"]
+    max_age       = 86400
+  }
+
   depends_on = [aws_lambda_permission.allow_function_url]
 }
 
@@ -141,7 +148,7 @@ resource "random_id" "bucket_suffix" {
 }
 
 resource "aws_s3_bucket" "resume_bucket" {
-  bucket = "animals4life-resume-${random_id.bucket_suffix.hex}"
+  bucket        = "animals4life-resume-${random_id.bucket_suffix.hex}"
   force_destroy = true
 }
 
@@ -155,37 +162,9 @@ resource "aws_s3_bucket_public_access_block" "resume_bucket_pab" {
   restrict_public_buckets = true
 }
 
-# Bucket policy to allow CloudFront OAC to read objects
-resource "aws_s3_bucket_policy" "resume_bucket_policy" {
-  bucket = aws_s3_bucket.resume_bucket.id
-
-  depends_on = [
-    aws_cloudfront_distribution.resume_distribution
-  ]
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowCloudFrontServicePrincipal"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.resume_bucket.arn}/*"
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.resume_distribution.arn
-          }
-        }
-      }
-    ]
-  })
-}
 # Generate config.js with Lambda URL dynamically
 resource "local_file" "config_js" {
-  content = <<-EOT
+  content  = <<-EOT
     const CONFIG = {
       LAMBDA_URL: "${aws_lambda_function_url.url1.function_url}"
     };
@@ -195,17 +174,20 @@ resource "local_file" "config_js" {
   depends_on = [aws_lambda_function_url.url1]
 }
 
-# Modify the website_files resource to include config.js
+# Upload website files
 resource "aws_s3_object" "website_files" {
-  for_each = fileset("${path.root}/html5up-strata", "**")
+  for_each = fileset("${path.module}/../html5up-strata", "**")
 
   bucket       = aws_s3_bucket.resume_bucket.id
   key          = each.value
-  source       = "${path.root}/html5up-strata/${each.value}"
-  etag         = filemd5("${path.root}/html5up-strata/${each.value}")
+  source       = "${path.module}/../html5up-strata/${each.value}"
+  etag         = filemd5("${path.module}/../html5up-strata/${each.value}")
   content_type = lookup(local.mime_types, regex("\\.[^.]+$", each.value), "application/octet-stream")
 
-  depends_on = [local_file.config_js]
+  depends_on = [
+    local_file.config_js,
+    aws_s3_bucket_public_access_block.resume_bucket_pab
+  ]
 }
 
 locals {
@@ -300,11 +282,12 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
 
   aliases = [
     "animals4life.shop",
-    local.resume_subdomain  
+    local.resume_subdomain
   ]
 
   depends_on = [
-    aws_acm_certificate_validation.cert
+    aws_acm_certificate_validation.cert,
+    aws_s3_object.website_files
   ]
 
   origin {
@@ -353,6 +336,37 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
     error_code         = 404
     response_code      = 200
     response_page_path = "/index.html"
+  }
+}
+
+# Bucket policy to allow CloudFront OAC to read objects
+resource "aws_s3_bucket_policy" "resume_bucket_policy" {
+  bucket = aws_s3_bucket.resume_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.resume_bucket.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.resume_distribution.arn
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [aws_cloudfront_distribution.resume_distribution]
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -417,6 +431,7 @@ output "certificate_arn" {
   value       = aws_acm_certificate.cert.arn
   description = "ACM Certificate ARN"
 }
+
 output "cloudfront_distribution_id" {
   value       = aws_cloudfront_distribution.resume_distribution.id
   description = "CloudFront Distribution ID"
