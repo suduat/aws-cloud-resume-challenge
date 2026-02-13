@@ -1,32 +1,37 @@
 name: Upload html5up-strata
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - 'html5up-strata/**'
+      - '.github/workflows/front-end-cicd.yml'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      # Configure AWS credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::447572331640:role/GitHubActionsTerraformRole
           aws-region: ap-south-1
       
-      # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_wrapper: false  # Important for clean outputs
+          terraform_wrapper: false
       
-      # Get dynamic values from Terraform
       - name: Get Infrastructure Values from Terraform
         id: infra
         run: |
@@ -42,7 +47,6 @@ jobs:
           echo "✅ CloudFront ID: $CF_DIST_ID"
           echo "✅ S3 Bucket: $S3_BUCKET"
       
-      # Generate config.js with dynamic Lambda URL
       - name: Generate config.js
         run: |
           mkdir -p html5up-strata/assets/js
@@ -54,27 +58,31 @@ jobs:
           echo "✅ Generated config.js with Lambda URL"
           cat html5up-strata/assets/js/config.js
       
-      # Upload to S3
       - name: Sync files to S3
         run: |
           aws s3 sync html5up-strata/ s3://${{ steps.infra.outputs.s3_bucket }}/ \
             --delete \
             --exclude ".git/*" \
-            --exclude ".github/*"
+            --exclude ".github/*" \
+            --cache-control "public, max-age=0, must-revalidate"
           echo "✅ Files synced to S3"
       
-      # Invalidate CloudFront cache
       - name: Invalidate CloudFront Cache
         run: |
-          aws cloudfront create-invalidation \
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id ${{ steps.infra.outputs.cf_dist_id }} \
-            --paths "/*"
-          echo "✅ CloudFront cache invalidated"
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+          echo "✅ CloudFront invalidation started: $INVALIDATION_ID"
+          echo "⏳ Waiting for invalidation to complete..."
+          aws cloudfront wait invalidation-completed \
+            --distribution-id ${{ steps.infra.outputs.cf_dist_id }} \
+            --id $INVALIDATION_ID
+          echo "✅ CloudFront cache cleared"
       
-      # Summary
       - name: Deployment Summary
         run: |
-          echo "🚀 Deployment Complete!"
+          echo "🚀 Frontend Deployment Complete!"
           echo "📍 Website: https://sudeshna.resume.animals4life.shop"
           echo "⚡ Lambda: ${{ steps.infra.outputs.lambda_url }}"
-          echo "☁️  CloudFront: ${{ steps.infra.outputs.cf_dist_id }}"

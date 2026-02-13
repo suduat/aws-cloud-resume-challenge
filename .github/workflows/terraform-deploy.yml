@@ -2,7 +2,10 @@ name: Terraform Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/terraform-cicd.yml'
   workflow_dispatch:
 
 jobs:
@@ -25,8 +28,9 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false  # Important for clean outputs
 
-      # 💣 Remove any cached providers
       - name: Clean Terraform Cache
         run: |
           rm -rf infra/.terraform
@@ -44,11 +48,29 @@ jobs:
         working-directory: infra
         run: terraform apply -auto-approve
 
+      - name: Wait for CloudFront Deployment
+        working-directory: infra
+        run: |
+          DIST_ID=$(terraform output -raw cloudfront_distribution_id)
+          echo "⏳ Waiting for CloudFront distribution $DIST_ID to deploy..."
+          aws cloudfront wait distribution-deployed --id $DIST_ID
+          echo "✅ CloudFront deployed successfully"
+
       - name: CloudFront Invalidation
         working-directory: infra
         run: |
           DIST_ID=$(terraform output -raw cloudfront_distribution_id)
-          aws cloudfront create-invalidation \
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
             --distribution-id $DIST_ID \
-            --paths "/*"
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+          echo "✅ Created invalidation: $INVALIDATION_ID"
 
+      - name: Deployment Summary
+        working-directory: infra
+        run: |
+          echo "🚀 Infrastructure Deployment Complete!"
+          echo "📍 Website: $(terraform output -raw website_url)"
+          echo "⚡ Lambda: $(terraform output -raw lambda_function_url)"
+          echo "☁️  CloudFront: $(terraform output -raw cloudfront_domain)"

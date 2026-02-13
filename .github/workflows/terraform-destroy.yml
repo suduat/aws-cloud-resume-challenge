@@ -2,6 +2,11 @@ name: Terraform Destroy
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "destroy" to confirm destruction'
+        required: true
+        default: ''
 
 jobs:
   destroy:
@@ -12,6 +17,14 @@ jobs:
       contents: read
 
     steps:
+      - name: Verify Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "destroy" ]; then
+            echo "❌ Destruction not confirmed. You must type 'destroy' to proceed."
+            exit 1
+          fi
+          echo "✅ Destruction confirmed"
+
       - name: Checkout Repo
         uses: actions/checkout@v4
 
@@ -31,3 +44,10 @@ jobs:
       - name: Terraform Destroy
         working-directory: infra
         run: terraform destroy -auto-approve
+
+      - name: Cleanup Local State
+        working-directory: infra
+        run: |
+          rm -f terraform.tfstate
+          rm -f terraform.tfstate.backup
+          echo "✅ Local state cleaned up"
