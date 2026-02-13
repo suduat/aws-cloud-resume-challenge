@@ -112,11 +112,6 @@ resource "aws_lambda_function_url" "url1" {
 
 locals {
   resume_subdomain = "sudeshna.resume.animals4life.shop"
-  
-  # Determine the correct path to html5up-strata
-  # For local: ../html5up-strata (when running from infra/)
-  # For GitHub Actions: html5up-strata (when running from project root with working-directory: infra)
-  website_dir = fileexists("${path.module}/../html5up-strata/index.html") ? "${path.module}/../html5up-strata" : "${path.module}/html5up-strata"
 }
 
 # ==========================================
@@ -167,33 +162,8 @@ resource "aws_s3_bucket_public_access_block" "resume_bucket_pab" {
   restrict_public_buckets = true
 }
 
-# Generate config.js with Lambda URL dynamically
-resource "local_file" "config_js" {
-  content = <<-EOT
-    const CONFIG = {
-      LAMBDA_URL: "${aws_lambda_function_url.url1.function_url}"
-    };
-  EOT
-  filename = "${local.website_dir}/assets/js/config.js"
-
-  depends_on = [aws_lambda_function_url.url1]
-}
-
-# Upload website files
-resource "aws_s3_object" "website_files" {
-  for_each = fileset(local.website_dir, "**")
-
-  bucket       = aws_s3_bucket.resume_bucket.id
-  key          = each.value
-  source       = "${local.website_dir}/${each.value}"
-  etag         = filemd5("${local.website_dir}/${each.value}")
-  content_type = lookup(local.mime_types, regex("\\.[^.]+$", each.value), "application/octet-stream")
-
-  depends_on = [
-    local_file.config_js,
-    aws_s3_bucket_public_access_block.resume_bucket_pab
-  ]
-}
+# NOTE: File uploads to S3 are handled by GitHub Actions (front-end-cicd.yml)
+# Terraform only creates the infrastructure
 
 locals {
   mime_types = {
@@ -248,8 +218,8 @@ resource "aws_route53_record" "cert_validation" {
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
+      record   = dvo.resource_record_value
+      type     = dvo.resource_record_type
     }
   }
 
@@ -291,8 +261,7 @@ resource "aws_cloudfront_distribution" "resume_distribution" {
   ]
 
   depends_on = [
-    aws_acm_certificate_validation.cert,
-    aws_s3_object.website_files
+    aws_acm_certificate_validation.cert
   ]
 
   origin {
