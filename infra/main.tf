@@ -176,12 +176,12 @@ resource "local_file" "config_js" {
 
 # Upload website files
 resource "aws_s3_object" "website_files" {
-  for_each = fileset("${path.root}/html5up-strata", "**")
+  for_each = fileset("${path.module}/../html5up-strata", "**")
 
   bucket       = aws_s3_bucket.resume_bucket.id
   key          = each.value
-  source       = "${path.root}/html5up-strata/${each.value}"
-  etag         = filemd5("${path.root}/html5up-strata/${each.value}")
+  source       = "${path.module}/../html5up-strata/${each.value}"
+  etag         = filemd5("${path.module}/../html5up-strata/${each.value}")
   content_type = lookup(local.mime_types, regex("\\.[^.]+$", each.value), "application/octet-stream")
 
   depends_on = [
