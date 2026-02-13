@@ -80,12 +80,12 @@ data "archive_file" "zip_the_python_code" {
   output_path = "${path.module}/lambda/func.zip"
 }
 
-# Lambda Function URL Permission
 resource "aws_lambda_permission" "allow_function_url" {
-  statement_id           = "FunctionURLAllowPublicAccess"
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.myfunc.function_name
-  principal              = "*"
+  statement_id  = "AllowPublicFunctionUrlInvoke"
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = aws_lambda_function.myfunc.arn
+  principal     = "*"
+
   function_url_auth_type = "NONE"
 }
 
