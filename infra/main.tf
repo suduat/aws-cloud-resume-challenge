@@ -83,15 +83,21 @@ data "archive_file" "zip_the_python_code" {
 resource "aws_lambda_permission" "allow_function_url" {
   statement_id  = "AllowPublicFunctionUrlInvoke"
   action        = "lambda:InvokeFunctionUrl"
-  function_name = aws_lambda_function.myfunc.arn
+  function_name = aws_lambda_function.myfunc.function_name
   principal     = "*"
 
   function_url_auth_type = "NONE"
 }
+resource "aws_lambda_permission" "allow_public_invoke" {
+  statement_id  = "AllowPublicInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.myfunc.function_name
+  principal     = "*"
+}
 
 # Lambda Function URL
 resource "aws_lambda_function_url" "url1" {
-  function_name      = aws_lambda_function.myfunc.arn
+  function_name      = aws_lambda_function.myfunc.function_name
   authorization_type = "NONE"
   
   depends_on = [aws_lambda_permission.allow_function_url]
