@@ -112,6 +112,11 @@ resource "aws_lambda_function_url" "url1" {
 
 locals {
   resume_subdomain = "sudeshna.resume.animals4life.shop"
+  
+  # Determine the correct path to html5up-strata
+  # For local: ../html5up-strata (when running from infra/)
+  # For GitHub Actions: html5up-strata (when running from project root with working-directory: infra)
+  website_dir = fileexists("${path.module}/../html5up-strata/index.html") ? "${path.module}/../html5up-strata" : "${path.module}/html5up-strata"
 }
 
 # ==========================================
@@ -164,24 +169,24 @@ resource "aws_s3_bucket_public_access_block" "resume_bucket_pab" {
 
 # Generate config.js with Lambda URL dynamically
 resource "local_file" "config_js" {
-  content  = <<-EOT
+  content = <<-EOT
     const CONFIG = {
       LAMBDA_URL: "${aws_lambda_function_url.url1.function_url}"
     };
   EOT
-  filename = "${path.module}/../html5up-strata/assets/js/config.js"
+  filename = "${local.website_dir}/assets/js/config.js"
 
   depends_on = [aws_lambda_function_url.url1]
 }
 
 # Upload website files
 resource "aws_s3_object" "website_files" {
-  for_each = fileset("${path.module}/../html5up-strata", "**")
+  for_each = fileset(local.website_dir, "**")
 
   bucket       = aws_s3_bucket.resume_bucket.id
   key          = each.value
-  source       = "${path.module}/../html5up-strata/${each.value}"
-  etag         = filemd5("${path.module}/../html5up-strata/${each.value}")
+  source       = "${local.website_dir}/${each.value}"
+  etag         = filemd5("${local.website_dir}/${each.value}")
   content_type = lookup(local.mime_types, regex("\\.[^.]+$", each.value), "application/octet-stream")
 
   depends_on = [
