@@ -91,7 +91,7 @@ resource "aws_lambda_permission" "allow_function_url" {
 
 # Lambda Function URL
 resource "aws_lambda_function_url" "url1" {
-  function_name      = aws_lambda_function.myfunc.function_name
+  function_name      = aws_lambda_function.myfunc.arn
   authorization_type = "NONE"
   
   depends_on = [aws_lambda_permission.allow_function_url]
