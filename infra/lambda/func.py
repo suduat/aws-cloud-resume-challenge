@@ -8,10 +8,8 @@ table = dynamodb.Table("Cloudresume-test")
 def lambda_handler(event, context):
     print("EVENT:", json.dumps(event))
 
+    # DO NOT set CORS headers here - Function URL handles it
     headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "GET,OPTIONS",
         "Content-Type": "application/json"
     }
 
@@ -25,7 +23,6 @@ def lambda_handler(event, context):
 
     try:
         response = table.get_item(Key={"id": "0"})
-
         views = int(response.get("Item", {}).get("views", 0)) + 1
 
         table.put_item(
