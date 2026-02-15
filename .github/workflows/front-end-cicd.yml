@@ -86,3 +86,9 @@ jobs:
           echo "🚀 Frontend Deployment Complete!"
           echo "📍 Website: https://sudeshna.resume.animals4life.shop"
           echo "⚡ Lambda: ${{ steps.infra.outputs.lambda_url }}"
+
+      - name: Wait for CloudFront propagation
+        run: |
+          echo "Waiting 3 minutes for CloudFront edge cache propagation..."
+          sleep 180
+          echo "✅ Deployment should be live now!"

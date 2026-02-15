@@ -9,7 +9,7 @@ terraform {
       version = "~> 3.0"
     }
   }
-}
+} 
 
 # Main provider for ap-south-1
 provider "aws" {
