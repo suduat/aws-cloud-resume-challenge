@@ -1,76 +1,120 @@
-name: Terraform Deploy
+name: Terraform CI/CD
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
     paths:
       - 'infra/**'
-      - '.github/workflows/terraform-cicd.yml'
   workflow_dispatch:
 
 jobs:
   terraform:
+    name: 'Deploy Infrastructure'
     runs-on: ubuntu-latest
-
     permissions:
       id-token: write
       contents: read
-
+    
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::447572331640:role/GitHubActionsTerraformRole
-          aws-region: ap-south-1
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::447572331640:role/GitHubActionsTerraformRole
+        aws-region: ap-south-1
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false  # Important for clean outputs
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false
 
-      - name: Clean Terraform Cache
-        run: |
-          rm -rf infra/.terraform
-          rm -f infra/.terraform.lock.hcl
+    - name: Terraform Init
+      working-directory: infra
+      run: terraform init -upgrade
 
-      - name: Terraform Init
-        working-directory: infra
-        run: terraform init -upgrade
+    - name: Terraform Validate
+      working-directory: infra
+      run: terraform validate
 
-      - name: Terraform Validate
-        working-directory: infra
-        run: terraform validate
+    - name: Terraform Plan
+      working-directory: infra
+      run: terraform plan
 
-      - name: Terraform Apply
-        working-directory: infra
-        run: terraform apply -auto-approve
+    - name: Terraform Apply
+      working-directory: infra
+      run: terraform apply -auto-approve
 
-      - name: Wait for CloudFront Deployment
-        working-directory: infra
-        run: |
-          DIST_ID=$(terraform output -raw cloudfront_distribution_id)
-          echo "⏳ Waiting for CloudFront distribution $DIST_ID to deploy..."
-          aws cloudfront wait distribution-deployed --id $DIST_ID
-          echo "✅ CloudFront deployed successfully"
+    - name: Wait for CloudFront Deployment
+      working-directory: infra
+      run: |
+        DIST_ID=$(terraform output -raw cloudfront_distribution_id)
+        echo "⏳ Waiting for CloudFront..."
+        aws cloudfront wait distribution-deployed --id $DIST_ID
+        echo "✅ CloudFront ready"
 
-      - name: CloudFront Invalidation
-        working-directory: infra
-        run: |
-          DIST_ID=$(terraform output -raw cloudfront_distribution_id)
-          INVALIDATION_ID=$(aws cloudfront create-invalidation \
-            --distribution-id $DIST_ID \
-            --paths "/*" \
-            --query 'Invalidation.Id' \
-            --output text)
-          echo "✅ Created invalidation: $INVALIDATION_ID"
+    - name: Generate config.js and Upload Files
+      id: upload
+      working-directory: infra
+      run: |
+        LAMBDA_URL=$(terraform output -raw lambda_function_url)
+        S3_BUCKET=$(terraform output -raw s3_bucket_name)
+        DIST_ID=$(terraform output -raw cloudfront_distribution_id)
+        
+        # Generate config.js
+        cat > ../html5up-strata/assets/js/config.js << EOF
+        const CONFIG = {
+          LAMBDA_URL: "${LAMBDA_URL}"
+        };
+        EOF
+        
+        # Upload to S3
+        cd ..
+        aws s3 sync html5up-strata/ s3://$S3_BUCKET/ --delete
+        
+        # Invalidate cache
+        aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
+        
+        echo "lambda_url=$LAMBDA_URL" >> $GITHUB_OUTPUT
+        echo "✅ Files uploaded and cache invalidated"
 
-      - name: Deployment Summary
-        working-directory: infra
-        run: |
-          echo "🚀 Infrastructure Deployment Complete!"
-          echo "📍 Website: $(terraform output -raw website_url)"
-          echo "⚡ Lambda: $(terraform output -raw lambda_function_url)"
-          echo "☁️  CloudFront: $(terraform output -raw cloudfront_domain)"
+    - name: Wait and Quick Validation
+      run: |
+        echo "⏳ Waiting 2 minutes for propagation..."
+        sleep 120
+        
+        echo "🧪 Quick validation..."
+        
+        # Test website
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://sudeshna.resume.animals4life.shop)
+        if [ "$STATUS" = "200" ]; then
+          echo "✅ Website accessible"
+        else
+          echo "❌ Website error: $STATUS"
+          exit 1
+        fi
+        
+        # Test Lambda
+        LAMBDA_URL="${{ steps.upload.outputs.lambda_url }}"
+        if curl -s $LAMBDA_URL | grep -q "views"; then
+          VIEWS=$(curl -s $LAMBDA_URL | grep -o '"views":[0-9]*' | grep -o '[0-9]*')
+          echo "✅ Lambda working (Views: $VIEWS)"
+        else
+          echo "❌ Lambda failed"
+          exit 1
+        fi
+        
+        echo "✅ Basic validation passed"
+
+    - name: Deployment Summary
+      run: |
+        echo ""
+        echo "🎉 Deployment Complete!"
+        echo "========================================"
+        echo "📍 Website: https://sudeshna.resume.animals4life.shop"
+        echo "⚡ Lambda: ${{ steps.upload.outputs.lambda_url }}"
+        echo ""
+        echo "💡 Run full tests: Actions → 🧪 Run Tests & Validation"
+        echo "========================================"
