@@ -26,7 +26,7 @@ The Cloud Resume Challenge is a hands-on project that demonstrates cloud, DevOps
 
 ## 🏗️ Architecture
 
-```
+
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Internet Users                          │
 └────────────────────────────┬────────────────────────────────────┘
@@ -63,7 +63,7 @@ The Cloud Resume Challenge is a hands-on project that demonstrates cloud, DevOps
                               │    DynamoDB      │
                               │  (Views Counter) │
                               └──────────────────┘
-```
+
 
 **Key Components:**
 
@@ -102,7 +102,7 @@ The Cloud Resume Challenge is a hands-on project that demonstrates cloud, DevOps
 
 ## 📁 Project Structure
 
-```
+
 .
 ├── .github/
 │   └── workflows/
@@ -135,7 +135,7 @@ The Cloud Resume Challenge is a hands-on project that demonstrates cloud, DevOps
 │   ├── SECURITY.md              # Security considerations
 │   └── TROUBLESHOOTING.md       # Common issues
 └── README.md                    # This file
-```
+
 
 ## 🚀 Key Features
 
@@ -166,10 +166,10 @@ The Cloud Resume Challenge is a hands-on project that demonstrates cloud, DevOps
 ## 🧪 Testing
 
 ### **Unit Tests**
-```bash
+bash
 cd lambda
 pytest tests/ -v --cov=func --cov-report=term-missing
-```
+
 
 **Coverage:** 90%+
 
@@ -181,9 +181,9 @@ Tests include:
 - Edge cases
 
 ### **Integration Tests**
-```bash
+bash
 pytest tests/integration/ -v
-```
+
 
 Tests verify:
 - Lambda Function URL responds
@@ -283,8 +283,8 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 👤 Author
 
 **[Your Name]**
-- GitHub: [@username](https://github.com/username)
-- LinkedIn: [Your Profile](https://linkedin.com/in/yourprofile)
+- GitHub: [@username](https://github.com/suduat)
+- LinkedIn: [Your Profile](www.linkedin.com/in/sudeshna-sarkar-76aa7612)
 - Portfolio: [Coming Soon]
 
 ---
