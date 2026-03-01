@@ -1,15 +1,16 @@
+```markdown
 # AWS Cloud Resume Challenge
 
 > A serverless resume website with real-time visitor counter, built entirely on AWS with IaC and CI/CD.
 
-![Architecture Diagram](architecture.png)
+![Architecture Diagram](./diagrams/architecture.png)
 
-[![Deploy](https://github.com/suduat/aws-cloud-resume-challenge/actions/workflows/deploy.yml/badge.svg)](https://github.com/suduat/aws-cloud-resume-challenge/actions)
-[![Tests](https://github.com/suduat/aws-cloud-resume-challenge/actions/workflows/test.yml/badge.svg)](https://github.com/suduat/aws-cloud-resume-challenge/actions)
+[![Deploy](https://github.com/[username]/[repo]/actions/workflows/deploy.yml/badge.svg)](https://github.com/[username]/[repo]/actions)
+[![Tests](https://github.com/[username]/[repo]/actions/workflows/test.yml/badge.svg)](https://github.com/[username]/[repo]/actions)
 
 ## 🎯 Challenge Overview
 
-The Cloud Resume Challenge demonstrates cloud, DevOps, and software skills via a personal resume site:[web:26]
+The Cloud Resume Challenge is a hands-on project that demonstrates cloud, DevOps, and software development skills by building a personal resume website with the following requirements:
 
 1. ✅ Static website (HTML/CSS/JavaScript)
 2. ✅ Hosted on AWS S3
@@ -25,45 +26,47 @@ The Cloud Resume Challenge demonstrates cloud, DevOps, and software skills via a
 
 ## 🏗️ Architecture
 
+
 ┌─────────────────────────────────────────────────────────────────┐
-│ Internet Users │
+│                         Internet Users                          │
 └────────────────────────────┬────────────────────────────────────┘
-│
-▼
-┌──────────────────────┐
-│ Route53 DNS │
-│ animals4life.shop │
-└──────────┬───────────┘
-│
-▼
-┌──────────────────────────────┐
-│ CloudFront Distribution │
-│ (HTTPS + Custom Domain) │
-│ + ACM Certificate │
-└──────────┬───────────────────┘
-│
-┌───────────────┴────────────────┐
-│ │
-▼ ▼
-┌─────────────┐ ┌──────────────────┐
-│ S3 Bucket │ │ API Gateway │
-│ (Static │ │ (REST API) │
-│ Site) │ └────────┬─────────┘
-└─────────────┘ │
-▼
-┌──────────────────┐
-│ Lambda Function │
-│ (Python 3.13) │
-└────────┬─────────┘
-│
-▼
-┌──────────────────┐
-│ DynamoDB │
-│ (Views Counter) │
-└──────────────────┘
+                             │
+                             ▼
+                  ┌──────────────────────┐
+                  │     Route53 DNS      │
+                  │ animals4life.shop    │
+                  └──────────┬───────────┘
+                             │
+                             ▼
+              ┌──────────────────────────────┐
+              │   CloudFront Distribution    │
+              │   (HTTPS + Custom Domain)    │
+              │   + ACM Certificate          │
+              └──────────┬───────────────────┘
+                         │
+         ┌───────────────┴────────────────┐
+         │                                │
+         ▼                                ▼
+  ┌─────────────┐              ┌──────────────────┐
+  │  S3 Bucket  │              │   API Gateway    │
+  │  (Static    │              │  (REST API)      │
+  │   Site)     │              └────────┬─────────┘
+  └─────────────┘                       │
+                                        ▼
+                              ┌──────────────────┐
+                              │  Lambda Function │
+                              │   (Python 3.13)  │
+                              └────────┬─────────┘
+                                       │
+                                       ▼
+                              ┌──────────────────┐
+                              │    DynamoDB      │
+                              │  (Views Counter) │
+                              └──────────────────┘
 
 
 **Key Components:**
+
 - **Frontend:** HTML5UP Strata template, hosted in S3
 - **CDN:** CloudFront with Origin Access Control (OAC)
 - **DNS:** Route53 with custom domain
@@ -71,7 +74,7 @@ The Cloud Resume Challenge demonstrates cloud, DevOps, and software skills via a
 - **Backend:** Python Lambda + DynamoDB
 - **API:** API Gateway with Lambda Function URL
 - **IaC:** Terraform for all infrastructure
-- **CI/CD:** GitHub Actions for automated testing and deployment[file:26]
+- **CI/CD:** GitHub Actions for automated testing and deployment
 
 ## 💻 Tech Stack
 
@@ -99,147 +102,196 @@ The Cloud Resume Challenge demonstrates cloud, DevOps, and software skills via a
 
 ## 📁 Project Structure
 
+
 .
 ├── .github/
-│ └── workflows/
-│ ├── backend-cicd.yml # Backend CI/CD (if exists)
-│ └── frontend-cicd.yml # Frontend deployment (if exists)
+│   └── workflows/
+│       ├── backend-cicd.yml     # Backend CI/CD pipeline
+│       └── frontend-cicd.yml    # Frontend deployment
 ├── terraform/
-│ ├── main.tf
-│ ├── provider.tf
-│ ├── variables.tf
-│ ├── outputs.tf
-│ └── lambda/
-│ └── func.py
-├── lambda/ # (if separate from terraform/lambda/)
-│ ├── func.py
-│ └── tests/
-│ ├── test_func.py
-│ ├── conftest.py
-│ └── pytest.ini
+│   ├── main.tf                  # Main infrastructure
+│   ├── provider.tf              # AWS provider config
+│   ├── variables.tf             # Variables
+│   ├── outputs.tf               # Outputs
+│   └── lambda/
+│       └── func.py              # Lambda function code
+├── lambda/
+│   ├── func.py                  # Lambda source (for testing)
+│   └── tests/
+│       ├── test_func.py         # Unit tests
+│       ├── conftest.py          # Pytest fixtures
+│       └── pytest.ini           # Pytest config
 ├── tests/
-│ └── integration/
-│ └── test_api.py
-├── html5up-strata/ # Frontend
-│ ├── index.html
-│ └── assets/
-├── diagrams/ # Create this folder
-│ └── architecture.png # Move your PNG here
-├── docs/ # Create if missing
-│ ├── setup.md
-│ ├── security.md
-│ └── troubleshooting.md
-├── .gitignore
-├── README.md
-└── terraform.tfstate # .gitignore this!
+│   └── integration/
+│       └── test_api.py          # Integration tests
+├── html5up-strata/              # Frontend code
+│   ├── index.html
+│   ├── assets/
+│   └── ...
+├── diagrams/
+│   └── architecture.png         # Architecture diagram
+├── docs/
+│   ├── SETUP.md                 # Setup instructions
+│   ├── SECURITY.md              # Security considerations
+│   └── TROUBLESHOOTING.md       # Common issues
+└── README.md                    # This file
 
 
 ## 🚀 Key Features
 
-### Frontend
+### **Frontend**
 - Responsive design (mobile-first)
 - Fast loading (<1s on CloudFront)
 - Custom domain with HTTPS
 - Real-time visitor counter
 
-### Backend
-- Serverless architecture
-- Atomic DynamoDB operations
-- CORS support
-- Error handling
+### **Backend**
+- Serverless architecture (no server management)
+- Atomic DynamoDB operations (thread-safe counter)
+- CORS support for cross-origin requests
+- Comprehensive error handling
 
-### Infrastructure
-- 100% IaC (Terraform)
-- Multi-region (ap-south-1 + us-east-1)
-- Secure (CloudFront OAC)
-- Cost: <₹100/month
+### **Infrastructure**
+- 100% Infrastructure as Code (Terraform)
+- Multi-region setup (ap-south-1 + us-east-1)
+- Secure access patterns (CloudFront OAC, no public S3)
+- Cost-optimized (<₹100/month)
 
-### CI/CD
-- Automated tests/deploy
-- PR Terraform plan
-- CloudFront invalidation
+### **CI/CD**
+- Automated testing (unit + integration)
+- Automated deployments on push to main
+- PR validation with Terraform plan
+- CloudFront cache invalidation
 
 ## 🧪 Testing
 
-### Unit Tests
-```bash
+### **Unit Tests**
+bash
 cd lambda
 pytest tests/ -v --cov=func --cov-report=term-missing
 
-Coverage: 90%+ (DynamoDB mocks, handlers, CORS).
-Integration Tests
 
+**Coverage:** 90%+
+
+Tests include:
+- DynamoDB operations (mocked with moto)
+- Lambda handler logic
+- CORS headers
+- Error handling
+- Edge cases
+
+### **Integration Tests**
+bash
 pytest tests/integration/ -v
-Verifies API, DynamoDB, S3, CloudFront.
-📊 Performance & Metrics
-
-    Page load: <500ms
-
-    API: <200ms
-
-    Uptime: 99.9%
-
-    Cost: ~₹80/month[file:26]
-
-🔒 Security
-
-    Private S3 + OAC
-
-    HTTPS enforced
-
-    Least privilege IAM
-
-    DynamoDB encryption
-
-Details in docs/security.md (create if needed).
-🛠️ Local Development
-
-Prerequisites: AWS CLI, Terraform 1.6+, Python 3.13+.
-
-Setup in docs/setup.md.
-🚢 Deployment
-
-Automated via GitHub Actions on main push.
-
-Manual: terraform apply; aws s3 sync.
-🐛 Troubleshooting
-
-Common fixes in docs/troubleshooting.md.
-📚 What I Learned
-
-    AWS: OAC, multi-region, DynamoDB atoms
-
-    DevOps: Terraform state, Actions secrets
-
-    Challenges: OAC debug, cost opt
-
-📈 Future Improvements
-
-    CloudWatch alarms
-
-    WAF rate limiting
-
-    X-Ray tracing
-
-🔗 Resources
-
-  
-
-Cloud Resume Challenge
-
-AWS Well-Architected
-
-Terraform AWS
 
 
-📄 License
+Tests verify:
+- Lambda Function URL responds
+- DynamoDB table exists with correct schema
+- S3 bucket contains files
+- CloudFront distribution is active
+- Route53 DNS is configured
+- ACM certificate is valid
 
-MIT License (add LICENSE file).
-👤 Author
+## 📊 Performance & Metrics
 
-Sudeshna Sarkar
+- **Page Load Time:** <500ms (via CloudFront)
+- **API Response Time:** <200ms (Lambda cold start: ~1s)
+- **Uptime:** 99.9% (AWS SLA)
+- **Cost:** ~₹80/month in production
+  - CloudFront: ₹30
+  - Route53: ₹35
+  - Lambda/DynamoDB: Free tier
+  - S3: ₹5
 
-    GitHub: @suduat
+## 🔒 Security
 
-    LinkedIn: Profile
+See [security.md](docs/security.md) for more details.
 
+## 🛠️ Local Development
+
+### **Prerequisites**
+- AWS CLI configured with credentials
+- Terraform 1.6+
+- Python 3.13+
+- Node.js 18+ (for frontend local dev)
+
+### **Setup**
+See [setup.md](docs/setup.md) for more details.
+
+## 🚢 Deployment
+
+See [deployment.md](docs/deployment.md) for more details.
+
+## 🐛 Troubleshooting
+
+See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for more details.
+
+## 📚 What I Learned
+
+**AWS Services:**
+- S3 static website hosting vs. CloudFront OAC
+- CloudFront distribution configuration
+- Lambda Function URLs vs. API Gateway
+- DynamoDB single-table design
+- Route53 DNS management
+- ACM certificate provisioning and validation
+
+**DevOps:**
+- Terraform state management (local vs. remote)
+- GitHub Actions workflow design
+- Automated testing strategies
+- CI/CD best practices
+
+**Development:**
+- Python Lambda handler patterns
+- DynamoDB atomic operations
+- CORS configuration
+- pytest with moto for AWS mocking
+
+**Challenges Overcome:**
+1. CloudFront OAC configuration (vs. legacy OAI)
+2. Multi-region Terraform setup (different regions for services)
+3. DynamoDB schema design (single item counter)
+4. GitHub Actions secrets management
+5. Cost optimization (avoid unnecessary charges)
+
+## 📈 Future Improvements
+
+- [ ] Add CloudWatch dashboard for monitoring
+- [ ] Implement CloudWatch alarms for errors
+- [ ] Add API rate limiting with WAF
+- [ ] Implement blue-green deployment
+- [ ] Add performance monitoring (X-Ray)
+- [ ] Migrate to Terraform Cloud for remote state
+- [ ] Add custom error pages in CloudFront
+- [ ] Implement automated backup strategy
+- [ ] Add detailed visitor analytics
+- [ ] Create multi-environment setup (dev/staging/prod)
+
+## 🔗 Resources
+
+- [Cloud Resume Challenge](https://cloudresumechallenge.dev/)
+- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
+- [Terraform AWS Provider Docs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [My Blog Post: Building the Cloud Resume Challenge](link-to-medium-article)
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 👤 Author
+
+**[Your Name]**
+- GitHub: [@username](https://github.com/suduat)
+- LinkedIn: [Your Profile](www.linkedin.com/in/sudeshna-sarkar-76aa7612)
+- Portfolio: [Coming Soon]
+
+---
+
+⭐ If you found this helpful, please star the repo!
+
+📝 Questions? Open an issue or reach out on LinkedIn.
+
+🚀 Part of my journey to build 20+ cloud projects.
+```
