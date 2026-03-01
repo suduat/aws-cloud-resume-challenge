@@ -3,7 +3,7 @@
 
 > A serverless resume website with real-time visitor counter, built entirely on AWS with IaC and CI/CD.
 
-![Architecture Diagram](diagrams/architecture.png)
+![Architecture Diagram](./diagrams/architecture.png)
 
 [![Deploy](https://github.com/[username]/[repo]/actions/workflows/deploy.yml/badge.svg)](https://github.com/[username]/[repo]/actions)
 [![Tests](https://github.com/[username]/[repo]/actions/workflows/test.yml/badge.svg)](https://github.com/[username]/[repo]/actions)
