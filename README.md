@@ -3,7 +3,7 @@
 
 > A serverless resume website with real-time visitor counter, built entirely on AWS with IaC and CI/CD.
 
-![Architecture Diagram](./diagrams/architecture.png)
+![Architecture Diagram](diagrams/architecture.png)
 
 [![Deploy](https://github.com/[username]/[repo]/actions/workflows/deploy.yml/badge.svg)](https://github.com/[username]/[repo]/actions)
 [![Tests](https://github.com/[username]/[repo]/actions/workflows/test.yml/badge.svg)](https://github.com/[username]/[repo]/actions)
@@ -216,16 +216,12 @@ See [security.md](docs/security.md) for more details.
 - Python 3.13+
 - Node.js 18+ (for frontend local dev)
 
-### **Setup**
-See [setup.md](docs/setup.md) for more details.
+## 📚 Documentation
 
-## 🚢 Deployment
-
-See [deployment.md](docs/deployment.md) for more details.
-
-## 🐛 Troubleshooting
-
-See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for more details.
+- [Setup Guide](docs/setup.md)
+- [Deployment](docs/deployment.md)  
+- [Security](docs/security.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## 📚 What I Learned
 
